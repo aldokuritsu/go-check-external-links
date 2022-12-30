@@ -52,6 +52,13 @@ func main() {
 		}
 	}
 	forEachNode(doc, visitNode, nil)
+	// Vérifiez si les liens sont valides ou morts
+	deadLinks := checkLinks(links)
+
+	// Affichez les liens morts et leurs codes d'erreur HTTP associés
+	for link, statusCode := range deadLinks {
+		fmt.Printf("%s is dead (HTTP status code: %d)\n", link, statusCode)
+	}
 
 	// Ouverture d'un fichier CSV en écriture
 	file, err := os.Create("links.csv")
@@ -95,4 +102,44 @@ func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 	if post != nil {
 		post(n)
 	}
+}
+
+// Fonction qui vérifie si les liens sont valides ou morts
+
+func checkLinks(links []string) map[string]int {
+	// Créez un nouveau client HTTP
+	client := http.Client{}
+
+	// Créez un dictionnaire vide qui mappe les liens morts aux codes d'erreur HTTP
+	deadLinks := make(map[string]int)
+
+	// Parcourez chaque lien
+	for _, link := range links {
+		// Créez une nouvelle requête HTTP HEAD
+		req, err := http.NewRequest("HEAD", link, nil)
+		if err != nil {
+			fmt.Println("Error creating HTTP request:", err)
+			continue
+		}
+
+		// Envoyez la requête et récupérez la réponse
+		res, err := client.Do(req)
+		if err != nil {
+			fmt.Println("Error sending HTTP request:", err)
+			continue
+		}
+
+		// Fermez la réponse
+		defer res.Body.Close()
+
+		// Vérifiez le code de réponse
+		if res.StatusCode == http.StatusOK {
+			fmt.Println(link, "is valid")
+		} else {
+			fmt.Println(link, "is dead")
+			deadLinks[link] = res.StatusCode
+		}
+	}
+
+	return deadLinks
 }
