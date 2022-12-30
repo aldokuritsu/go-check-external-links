@@ -21,9 +21,6 @@ func main() {
 		url = "http://" + url
 	}
 
-	// Remplacer l'URL ci-dessous par celle à utiliser dans le script
-	// url := "https://macomptabilite.pro"
-
 	// Envoi d'une requête HTTP GET à l'URL et récupération de la réponse
 	response, err := http.Get(url)
 	if err != nil {
